@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 
-class NewTransactions extends StatelessWidget {
-  final textController = TextEditingController();
-  final amountController = TextEditingController();
+class NewTransactions extends StatefulWidget {
   final Function newtx;
   NewTransactions({required this.newtx, Key? key}) : super(key: key);
+
+  @override
+  State<NewTransactions> createState() => _NewTransactionsState();
+}
+
+class _NewTransactionsState extends State<NewTransactions> {
+  final textController = TextEditingController();
+
+  final amountController = TextEditingController();
 
   void submitData() {
     final String txt = textController.text;
@@ -12,19 +19,20 @@ class NewTransactions extends StatelessWidget {
     if (txt.isEmpty || amt.isNegative) {
       return;
     }
-    newtx(txt, amt);
+    widget.newtx(txt, amt);
+    Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(10),
+      padding: const EdgeInsets.all(10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Card(
             child: TextField(
-              decoration: InputDecoration(labelText: 'Title'),
+              decoration: const InputDecoration(labelText: 'Title'),
               controller: textController,
               onSubmitted: (_) => submitData(),
               keyboardType: TextInputType.name,
@@ -32,7 +40,7 @@ class NewTransactions extends StatelessWidget {
           ),
           Card(
             child: TextField(
-              decoration: InputDecoration(labelText: 'Amount'),
+              decoration: const InputDecoration(labelText: 'Amount'),
               controller: amountController,
               onSubmitted: (_) => submitData(),
               keyboardType: TextInputType.number,
@@ -40,8 +48,9 @@ class NewTransactions extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: submitData,
-            child: Text("Add Transaction"),
-            style: ElevatedButton.styleFrom(primary: Colors.orange[900]),
+            child: const Text("Add Transaction"),
+            style: ElevatedButton.styleFrom(
+                primary: Theme.of(context).primaryColor),
           )
         ],
       ),
