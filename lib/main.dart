@@ -1,84 +1,135 @@
-import 'dart:ui';
-import 'package:expense_app/newtransactions.dart';
-import 'package:expense_app/transactionslist.dart';
-
-import 'package:expense_app/transaction.dart';
 import 'package:flutter/material.dart';
 
-void main() => {runApp(MyApp())};
+import './widgets/new_transaction.dart';
+import './widgets/transaction_list.dart';
+import './widgets/chart.dart';
+import './models/transaction.dart';
+
+void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "Expense Tracker",
-      home: MyAppWidget(),
-      theme: ThemeData(primarySwatch: Colors.orange, accentColor: Colors.amber),
+      title: 'Personal Expenses',
+      theme: ThemeData(
+          primarySwatch: Colors.purple,
+          accentColor: Colors.amber,
+          // errorColor: Colors.red,
+          fontFamily: 'Quicksand',
+          appBarTheme: AppBarTheme()),
+      home: MyHomePage(),
     );
   }
 }
 
-class MyAppWidget extends StatefulWidget {
-  const MyAppWidget({Key? key}) : super(key: key);
-
+class MyHomePage extends StatefulWidget {
+  // String titleInput;
+  // String amountInput;
   @override
-  State<MyAppWidget> createState() => _MyAppWidgetState();
+  _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyAppWidgetState extends State<MyAppWidget> {
-  final List<Transactions> transactions = [
-    // Transactions(id: 1, name: "Milk", amount: 20, date: DateTime.now()),
-    // Transactions(id: 2, name: "Bread", amount: 40, date: DateTime.now())
+class _MyHomePageState extends State<MyHomePage> {
+  final List<Transaction> _userTransactions = [
+    // Transaction(
+    //   id: 't1',
+    //   title: 'New Shoes',
+    //   amount: 69.99,
+    //   date: DateTime.now(),
+    // ),
+    // Transaction(
+    //   id: 't2',
+    //   title: 'Weekly Groceries',
+    //   amount: 16.53,
+    //   date: DateTime.now(),
+    // ),
   ];
 
-  void _addtransaction(String txTitle, double txAmount) {
-    final newtx = Transactions(
-      name: txTitle,
+  List<Transaction> get _recentTransactions {
+    return _userTransactions.where((tx) {
+      return tx.date.isAfter(
+        DateTime.now().subtract(
+          Duration(days: 7),
+        ),
+      );
+    }).toList();
+  }
+
+  void _addNewTransaction(
+      String txTitle, double txAmount, DateTime chosenDate) {
+    final newTx = Transaction(
+      title: txTitle,
       amount: txAmount,
-      id: 5,
-      date: DateTime.now(),
+      date: chosenDate,
+      id: DateTime.now().toString(),
     );
+
     setState(() {
-      transactions.add(newtx);
+      _userTransactions.add(newTx);
     });
   }
 
-  void _startAddNewTransactions(BuildContext ctx) {
+  void _startAddNewTransaction(BuildContext ctx) {
     showModalBottomSheet(
-        context: ctx,
-        builder: (_) {
-          return GestureDetector(
-            child: NewTransactions(newtx: _addtransaction),
-            onTap: () {},
-            behavior: HitTestBehavior.opaque,
-          );
-        });
+      context: ctx,
+      builder: (_) {
+        return GestureDetector(
+          onTap: () {},
+          child: NewTransaction(_addNewTransaction),
+          behavior: HitTestBehavior.opaque,
+        );
+      },
+    );
+  }
+
+  void _deleteTransaction(String id) {
+    setState(() {
+      _userTransactions.removeWhere((tx) => tx.id == id);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final appBar = AppBar(
+      title: Text(
+        'Personal Expenses',
+      ),
+      actions: <Widget>[
+        IconButton(
+          icon: Icon(Icons.add),
+          onPressed: () => _startAddNewTransaction(context),
+        ),
+      ],
+    );
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Expense Tracker"),
-        actions: [
-          IconButton(
-              onPressed: () => {_startAddNewTransactions(context)},
-              icon: const Icon(Icons.add))
-        ],
+      appBar: appBar,
+      body: SingleChildScrollView(
+        child: Column(
+          // mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Container(
+              height: (MediaQuery.of(context).size.height -
+                      appBar.preferredSize.height -
+                      MediaQuery.of(context).padding.top) *
+                  0.3,
+              child: Chart(_recentTransactions),
+            ),
+            Container(
+              height: (MediaQuery.of(context).size.height -
+                      appBar.preferredSize.height -
+                      MediaQuery.of(context).padding.top) *
+                  0.7,
+              child: TransactionList(_userTransactions, _deleteTransaction),
+            ),
+          ],
+        ),
       ),
-      body: ListView(
-        children: [
-          Card(
-            child: const Text("Chart"),
-          ),
-          TransactionsList(transactions: transactions)
-        ],
-      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton(
-        onPressed: () => {_startAddNewTransactions(context)},
-        child: const Icon(Icons.add),
+        child: Icon(Icons.add),
+        onPressed: () => _startAddNewTransaction(context),
       ),
     );
   }
